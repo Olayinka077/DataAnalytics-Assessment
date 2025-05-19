@@ -1,0 +1,19 @@
+SELECT 
+    p.id AS account_id,
+    p.owner_id,
+    CONCAT(u.first_name, ' ', u.last_name) AS customer_name,
+    'Investment' AS account_type,
+    MAX(w.transaction_date) AS last_transaction_date,
+    DATEDIFF(DAY, MAX(w.transaction_date), GETDATE()) AS inactivity_days
+FROM 
+    adashi_staging.plans_plan p
+INNER JOIN 
+    adashi_staging.users_customeruser u ON p.owner_id = u.id
+LEFT JOIN 
+    adashi_staging.withdrawals_withdrawal w ON p.id = w.plan_id
+GROUP BY 
+    p.id, p.owner_id, u.first_name, u.last_name
+HAVING 
+    DATEDIFF(DAY, MAX(w.transaction_date), GETDATE()) > 365
+ORDER BY 
+    inactivity_days DESC;
