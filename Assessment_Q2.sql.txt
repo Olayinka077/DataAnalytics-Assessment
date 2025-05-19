@@ -1,0 +1,30 @@
+WITH TransactionData AS (
+    SELECT 
+        s.owner_id,
+        COUNT(s.id) / 12.0 AS avg_transactions_per_month
+    FROM 
+        [adashi_staging].[savings_savingsaccount] s
+    WHERE 
+        s.transaction_status = 'success'  -- Only count successful transactions
+    GROUP BY 
+        s.owner_id
+),
+FrequencyCategories AS (
+    SELECT 
+        CASE 
+            WHEN avg_transactions_per_month >= 10 THEN 'High Frequency'
+            WHEN avg_transactions_per_month BETWEEN 3 AND 9 THEN 'Medium Frequency'
+            ELSE 'Low Frequency'
+        END AS frequency_category,
+        COUNT(*) AS customer_count,
+        AVG(avg_transactions_per_month) AS avg_transactions_per_month
+    FROM 
+        TransactionData
+    GROUP BY 
+        CASE 
+            WHEN avg_transactions_per_month >= 10 THEN 'High Frequency'
+            WHEN avg_transactions_per_month BETWEEN 3 AND 9 THEN 'Medium Frequency'
+            ELSE 'Low Frequency'
+        END
+)
+SELECT * FROM FrequencyCategories;
